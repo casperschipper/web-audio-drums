@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script src="http://sriku.org/lib/steller/steller.min.js"></script>
+<script>
+    var sh = new org.anclab.steller.Scheduler(new webkitAudioContext);
+    var jsn = sh.models.jsnode({
+        numberOfInputs: 0,
+        numberOfOutputs: 1,
+        onaudioprocess: function (event) {
+            // ...
+            return toSamp - fromSamp;
+        }});
+    jsn.connect(AC.destination);
+    sh.play(sh.fire(function (clock) {
+        jsn.start(clock.t);
+        jsn.stop(clock.t + 10.0);
+    }));
+</script>
+</head>
+<body>
+<h1> cs5.js </h1>
+</body>
+</html>
