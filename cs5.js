@@ -431,12 +431,12 @@ $(document).ready( function ( ) {
 		this.snareEvent = function(startTime,freq1,duration) {
 			var SinOsc = this.context.createOscillator();
 			var SinGain = this.context.createGain();
-			var NoiseGen = this.context.createWhiteNoise();
+			var NoiseGen = this.context.createWhiteNoise2();
 			var NoiseGain = this.context.createGain();
 			var GainOut = this.context.createGain();
 
 			SinOsc.frequency.value = freq1;
-			SinGain.gain.setValueAtTime(0.5,startTime);
+			SinGain.gain.setValueAtTime(0.4,startTime);
 			
 			SinOsc.connect(SinGain);
 			SinGain.connect(GainOut);
@@ -445,8 +445,10 @@ $(document).ready( function ( ) {
 			SinOsc.stop(startTime+duration);
 
 			NoiseGen.connect(NoiseGain);
+			NoiseGen.start(startTime);
 			NoiseGain.gain.setValueAtTime(0.1,startTime);
 			NoiseGain.gain.setValueAtTime(0,startTime+duration);
+			NoiseGen.stop(startTime+duration+0.01);
 
 			GainOut.gain.value = 0; // this puts the start at 0.
 			GainOut.gain.setValueAtTime(0.1,startTime);
@@ -585,17 +587,19 @@ $(document).ready( function ( ) {
 		}
 	};
 
-	var SnareTest = function ( ) {
+	var SnareTest = function ( pattern ) {
+		var patternIter = pattern.iterator();
+
 		this.nextEntryDelay = function( ) {
-			return 0.5;
+			return 1.0 / 10.0;
 		}
 		this.next = function(eventStartTime) {
-			synth.snareEvent(eventStartTime,120,this.nextDur());	
-			console.log('bang');
-
+			if (patternIter.next() > 0) {
+				synth.snareEvent(eventStartTime,120,this.nextDur());	
+			}
 		}
 		this.nextDur = function( ) {
-			return 0.3;
+			return 0.5;
 		}
 	}
 
@@ -742,6 +746,12 @@ $(document).ready( function ( ) {
 	pattern3.createGUI();
 	console.log(pattern3);
 
+	var pattern4 = $.extend(true, {}, pattern); // another object....
+	pattern4.name = "snare";
+	pattern4.pattern = [0,0,1,0,0,0,0,0];
+	pattern4.createGUI();
+	console.log(pattern4);
+
 	var hiHatTest = new HihatTest(-1,pattern.pattern); // create a hiHat test event creator
 	var schedular = new Schedular(context,0.05,0.07,hiHatTest); // play it with a schedular
 	schedular.start(); // start playback 
@@ -753,6 +763,10 @@ $(document).ready( function ( ) {
 	var bassDrumTest = new BasDrumTest(pattern3.pattern);
 	var schedular3 = new Schedular(context,0.05,0.07,bassDrumTest);
 	schedular3.start();
+
+	var snareDrumTest = new SnareTest(pattern4.pattern);
+	var schedular4 = new Schedular(context,0.05,0.07,snareDrumTest);
+	schedular4.start();
 
 
 });
