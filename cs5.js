@@ -701,6 +701,7 @@ $(document).ready( function ( ) {
 		}
 	};
 
+	// this creates the first pattern, it is a array of 1 and 0's with a jQuery gui.
 	var pattern = {
 		name : "hihat1",
 		pattern : [1,0,1,0,0,0,0,0] ,
@@ -711,7 +712,7 @@ $(document).ready( function ( ) {
 
 				var patt = this.pattern;
 
-				var clickFunction = function (index,element) {
+				var clickFunction = function (index,element) { // because of scoping, make a function return a function.
 					return function ( ) {
 					  	patt[index] = (patt[index] === 0) ? 1 : 0;
 					  	var color = ( patt[index] === 1 ) ? "#000" : "#ddd";
@@ -727,23 +728,23 @@ $(document).ready( function ( ) {
 		}
 	};
 
-	pattern.createGUI();
+	pattern.createGUI(); // create first gui
 
 
-	var pattern2 = $.extend(true, {}, pattern);
-	pattern2.name = "hihat2";
-	pattern2.pattern = [0,1,0,1,1,1,1,1];
+	var pattern2 = $.extend(true, {}, pattern); // copy object
+	pattern2.name = "hihat2"; // set it to another name(this is also important to prevent DOM naming aliasing)
+	pattern2.pattern = [0,1,0,1,1,1,1,1]; 
 	pattern2.createGUI();
 
-	var pattern3 = $.extend(true, {}, pattern);
+	var pattern3 = $.extend(true, {}, pattern); // another object....
 	pattern3.name = "kick";
 	pattern3.pattern = [1,0,0,0,1,0,0,0];
 	pattern3.createGUI();
 	console.log(pattern3);
 
-	var hiHatTest = new HihatTest(-1,pattern.pattern);
-	var schedular = new Schedular(context,0.05,0.07,hiHatTest);
-	schedular.start();
+	var hiHatTest = new HihatTest(-1,pattern.pattern); // create a hiHat test event creator
+	var schedular = new Schedular(context,0.05,0.07,hiHatTest); // play it with a schedular
+	schedular.start(); // start playback 
 
 	var hiHatTest2 = new HihatTest(1,pattern2.pattern);
 	var schedular2 = new Schedular(context,0.05,0.07,hiHatTest2);
