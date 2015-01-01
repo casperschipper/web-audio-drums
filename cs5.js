@@ -143,6 +143,10 @@ $(document).ready( function ( ) {
 	    };
 	});
 
+		
+
+
+
 	// returns an iterable object based on an array (it loops by default).
 	Array.prototype.iterator = function () {
 		var that = this;
@@ -706,51 +710,47 @@ $(document).ready( function ( ) {
 	};
 
 	// this creates the first pattern, it is a array of 1 and 0's with a jQuery gui.
-	var pattern = {
-		name : "hihat1",
-		pattern : [1,0,1,0,0,0,0,0] ,
-		createGUI : function ( ) {
-			$("body").append('<p></p>');
-			for (var i = 0;i<this.pattern.length;i++) {
-				$("body").append('<div id="cell'+this.name+i+'" class="patternCell noselect">.</div>');
+	var Pattern = function (nameString,pattern) {
+		this.name = nameString || 'noname';
+		this.pattern = pattern || [1,0,0,0,0,0,0,0];		
+	};
 
-				var patt = this.pattern;
+	Pattern.prototype.createGUI = function ( ) {
+		$("body").append('<p></p>');
+		for (var i = 0;i<this.pattern.length;i++) {
+			$("body").append('<div id="cell'+this.name+i+'" class="patternCell noselect">.</div>');
 
-				var clickFunction = function (index,element) { // because of scoping, make a function return a function.
-					return function ( ) {
-					  	patt[index] = (patt[index] === 0) ? 1 : 0;
-					  	var color = ( patt[index] === 1 ) ? "#000" : "#ddd";
-					  	$(this).css("background-color",color);
-					};
-				}
-				
-				$( ("#cell"+this.name+i) )
-				.css("background-color",( this.pattern[i] === 1 ) ? "#000" : "#ddd")
-				.css("color","white")
-				.click( clickFunction(i,this) );
+			var patt = this.pattern;
+
+			var clickFunction = function (index,element) { // because of scoping, make a function return a function.
+				return function ( ) {
+				  	patt[index] = (patt[index] === 0) ? 1 : 0;
+				  	var color = ( patt[index] === 1 ) ? "#000" : "#ddd";
+				  	$(this).css("background-color",color);
+				};
 			}
+			
+			$( ("#cell"+this.name+i) )
+			.css("background-color",( this.pattern[i] === 1 ) ? "#000" : "#ddd")
+			.css("color","white")
+			.click( clickFunction(i,this) );
 		}
 	};
 
+	
+	var pattern = new Pattern("hihat1",[1,0,1,0,0,0,0,0])
 	pattern.createGUI(); // create first gui
 
 
-	var pattern2 = $.extend(true, {}, pattern); // copy object
-	pattern2.name = "hihat2"; // set it to another name(this is also important to prevent DOM naming aliasing)
-	pattern2.pattern = [0,1,0,1,1,1,1,1]; 
+
+	var pattern2 = new Pattern("hihat2",[1,0,0,1,1,1,1,1]);
 	pattern2.createGUI();
 
-	var pattern3 = $.extend(true, {}, pattern); // another object....
-	pattern3.name = "kick";
-	pattern3.pattern = [1,0,0,0,1,0,0,0];
+	var pattern3 = new Pattern("kick",[1,0,0,0,0,0,0,0]); // another object....
 	pattern3.createGUI();
-	console.log(pattern3);
 
-	var pattern4 = $.extend(true, {}, pattern); // another object....
-	pattern4.name = "snare";
-	pattern4.pattern = [0,0,1,0,0,0,0,0];
+	var pattern4 = new Pattern("snare",[1,0,0,0,1,0,0,0]);
 	pattern4.createGUI();
-	console.log(pattern4);
 
 	var hiHatTest = new HihatTest(-1,pattern.pattern); // create a hiHat test event creator
 	var schedular = new Schedular(context,0.05,0.07,hiHatTest); // play it with a schedular
