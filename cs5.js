@@ -738,18 +738,18 @@ $(document).ready( function ( ) {
 	};
 
 	
-	var pattern = new Pattern("hihat1",[1,0,1,0,0,0,0,0])
+	var pattern = new Pattern("hihat1",[1,0,1,0,0,0,0,0,1,0,1,0,0,0,0,0])
 	pattern.createGUI(); // create first gui
 
 
 
-	var pattern2 = new Pattern("hihat2",[1,0,0,1,1,1,1,1]);
+	var pattern2 = new Pattern("hihat2",[1,0,0,1,1,1,1,1,1,0,1,0,0,0,0,0]);
 	pattern2.createGUI();
 
-	var pattern3 = new Pattern("kick",[1,0,0,0,0,0,0,0]); // another object....
+	var pattern3 = new Pattern("kick",[1,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0]); // another object....
 	pattern3.createGUI();
 
-	var pattern4 = new Pattern("snare",[1,0,0,0,1,0,0,0]);
+	var pattern4 = new Pattern("snare",[1,0,0,0,1,0,0,0,1,0,1,0,0,0,0,0]);
 	pattern4.createGUI();
 
 	var hiHatTest = new HihatTest(-1,pattern.pattern); // create a hiHat test event creator
