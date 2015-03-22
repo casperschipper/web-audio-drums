@@ -364,6 +364,10 @@ $(document).ready( function ( ) {
 				result[i] = value;
 			}
 			return result;
+		},
+		fillArrayWith:function(size,value) {
+			var arr = Array.apply(null,Array(size));
+			return arr.map(function( ) { return value });
 		}
 	}
 
@@ -393,7 +397,7 @@ $(document).ready( function ( ) {
 			sawOsc.noteOff(startTime+(duration*3));
 		};
 
-		this.bassDrumEvent = function(startTime,freq1,freq2,duration) {
+		this.bassDrumEvent = function(startTime,freq1,freq2,duration,gain) {
 			var SinOsc = this.context.createOscillator();
 			var Gain = this.context.createGain();
 			var Distortion = this.context.createWaveShaper();
@@ -426,13 +430,13 @@ $(document).ready( function ( ) {
 			//Gain.gain.setValueAtTime(1,startTime+0.0001);
 			Gain.gain.setValueCurveAtTime(this.ampCurve,startTime,duration);
 
-			Output.gain.setValueAtTime(0.5,startTime);
+			Output.gain.setValueAtTime(gain,startTime);
 
 			SinOsc.start(startTime);
 			SinOsc.stop(startTime+duration);
 		}
 
-		this.snareEvent = function(startTime,freq1,duration) {
+		this.snareEvent = function(startTime,freq1,duration,gain) {
 			var SinOsc = this.context.createOscillator();
 			var SinGain = this.context.createGain();
 			var NoiseGen = this.context.createWhiteNoise2();
@@ -459,15 +463,17 @@ $(document).ready( function ( ) {
 			GainOut.gain.exponentialRampToValueAtTime(0.001,startTime+duration);
 
 			NoiseGen.connect(GainOut);
+			GainOut.gain.setValueAtTime(gain,startTime);
 			GainOut.connect(this.context.destination);
 		}
 
-		this.hihatEvent = function(startTime,freq1,duration,pan) {
+		this.hihatEvent = function(startTime,freq1,duration,pan,gain) {
 			currentTime = this.context.currentTime;
 			var noiseGen = this.context.createWhiteNoise2();
 			var ampNode = this.context.createGain();
 			var highPassFilter = this.context.createBiquadFilter();
 			var panner = this.context.createPanner();
+			var outputGain = this.context.createGain();
 			panner.setPosition(pan,1,1);
 
 			// noiseGen -> ampNode -> highPassFilter -> destination
@@ -475,7 +481,8 @@ $(document).ready( function ( ) {
 			noiseGen.start(startTime);
 			noiseGen.connect(ampNode);
 			ampNode.connect(highPassFilter);
-			highPassFilter.connect(panner);
+			highPassFilter.connect(outputGain);
+			outputGain.connect(panner);
 			panner.connect(this.context.destination);
 
 			highPassFilter.frequency.value = freq1;
@@ -485,6 +492,8 @@ $(document).ready( function ( ) {
 			ampNode.gain.setValueAtTime(0.1,startTime);
 			ampNode.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
 			ampNode.gain.linearRampToValueAtTime(0,startTime + duration + 0.001);
+
+			outputGain.gain.setValueAtTime(gain,startTime);
 
 			noiseGen.stop(startTime + duration + 0.01);
 		}
@@ -598,12 +607,13 @@ $(document).ready( function ( ) {
 			return 1.0 / 10.0;
 		}
 		this.next = function(eventStartTime) {
-			if (patternIter.next() > 0) {
-				synth.snareEvent(eventStartTime,120,this.nextDur());	
+			var e = patternIter.next();
+			if (Math.random() < e.p) {
+				synth.snareEvent(eventStartTime,120,this.nextDur(),e.g);	
 			}
 		}
 		this.nextDur = function( ) {
-			return 0.5;
+			return 0.25;
 		}
 	}
 
@@ -620,8 +630,9 @@ $(document).ready( function ( ) {
 		}	
 
 		this.next = function(eventStartTime) {
-			if (patternIter.next() > 0) {
-				synth.hihatEvent(eventStartTime,this.nextFreq(),this.nextDur(),pan);
+			var e = patternIter.next();
+			if (Math.random() < e.p) {
+				synth.hihatEvent(eventStartTime,this.nextFreq(),this.nextDur(),pan,e.g);
 			}
 		}
 
@@ -638,8 +649,9 @@ $(document).ready( function ( ) {
 		}
 
 		this.next = function(eventStartTime) {
-			if (patternIter.next() > 0) {
-				synth.bassDrumEvent(eventStartTime,200,20,this.nextDur()); // startTime,freq1,freq2,duration
+			var e = patternIter.next();
+			if (Math.random() < e.p) {
+				synth.bassDrumEvent(eventStartTime,200,20,this.nextDur(),e.g); // startTime,freq1,freq2,duration
 			}
 		}
 
@@ -709,10 +721,70 @@ $(document).ready( function ( ) {
 		}
 	};
 
+	var makeShadedSlider = function( ) {
+		var isDragging = false;
+		var slideHeight = 100.0;
+
+		var clip = function(value,min,max) { // helper
+			return Math.max(Math.min(max,value),min);
+		}
+
+		var numberToHexColor = function(value) {
+			value = 1 - value;
+			value = Math.floor(value * 255);
+			value = value.toString(16);
+			if (value.length < 2) value = "0" + value; // pad with a zero;
+			return "#"+value+value+value;
+		}
+
+		return function(object,pattern,index) {
+			// tell view to update the boxes.
+			object.css("background-color",numberToHexColor(pattern.pattern[index].p));
+			object.css("border-color",numberToHexColor(pattern.pattern[index].g))
+
+			// add behavior on dragging:
+			object.mousedown( function( ) { // set the mousedown
+				var offsetY = object.offset().top;
+				var offsetX = object.offset().left;
+				//var height = object.height();
+				$(window).mousemove(function(e) { // connect a mouseMove
+					var value = clip(
+							((e.clientY - offsetY) / slideHeight)
+					,0,1);
+
+					value = 1 - value;
+
+					var valueX = clip(
+						((e.clientX - offsetX) / slideHeight)
+					,0,1);
+
+
+					object.css("background-color",numberToHexColor(value));
+					object.css("border-color",numberToHexColor(valueX));
+					object.css("color",numberToHexColor((value < 0.5) ? 1 : 0));
+
+					pattern.updateIndex(index,value);
+					pattern.updateIndexGain(index,Math.pow(valueX,3));
+
+
+					isDragging = true;
+				});
+			});
+			$(window).mouseup( function( ) {
+				var wasDragging = isDragging;
+				isDragging = false;
+				$(window).unbind("mousemove"); 
+				// if (!wasDragging) {
+
+				// }
+			});
+		}
+	}();
+
 	// this creates the first pattern, it is a array of 1 and 0's with a jQuery gui.
 	var Pattern = function (nameString,pattern) {
 		this.name = nameString || 'noname';
-		this.pattern = pattern || [1,0,0,0,0,0,0,0];		
+		this.pattern = pattern || [{g:1,p:1},{g:1,p:1}];		
 	};
 
 	Pattern.prototype.createGUI = function ( ) {
@@ -737,20 +809,53 @@ $(document).ready( function ( ) {
 		}
 	};
 
+	Pattern.prototype.createGUI2 = function ( ) {
+		$("body").append('<p></p>');
+		for (var i = 0;i<this.pattern.length;i++) {
+			$("body").append('<div id="cell'+this.name+i+'" class="testMouse"></div>');
+			makeShadedSlider($("#cell"+this.name+i),this,i);
+		}
+
+		var that = this;// that is this pattern.
+	}
+
+	Pattern.prototype.updateIndex = function (index,value) {
+		this.pattern[index].p = value;
+	}
+
+	Pattern.prototype.updateIndexGain = function  (index,value) {
+		this.pattern[index].g = value;
+	}
+
+	var Note = function (gain,chance) { // constructor
+		this.g = gain;
+		this.p = chance;
+	}
+
+	Note.prototype.duplicate = function (numberOfTimes)  {
+		var that = this;
+		return cs.listWithGenAmount(function() { 
+			return new Note(that.g,that.p);
+		} , numberOfTimes );
+	}
+
+	var protoNote = new Note(0,1);
+	var rowOfNotes = protoNote.duplicate(8);
 	
-	var pattern = new Pattern("hihat1",[1,0,1,0,0,0,0,0,1,0,1,0,0,0,0,0])
-	pattern.createGUI(); // create first gui
+	var pattern = new Pattern("hihat1",rowOfNotes);
+	pattern.createGUI2(); // create first gui
 
+	rowOfNotes = protoNote.duplicate(8);
+	var pattern2 = new Pattern("hihat2",rowOfNotes);
+	pattern2.createGUI2();
 
+    rowOfNotes = protoNote.duplicate(8);
+	var pattern3 = new Pattern("kick",rowOfNotes); // another object....
+	pattern3.createGUI2();
 
-	var pattern2 = new Pattern("hihat2",[1,0,0,1,1,1,1,1,1,0,1,0,0,0,0,0]);
-	pattern2.createGUI();
-
-	var pattern3 = new Pattern("kick",[1,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0]); // another object....
-	pattern3.createGUI();
-
-	var pattern4 = new Pattern("snare",[1,0,0,0,1,0,0,0,1,0,1,0,0,0,0,0]);
-	pattern4.createGUI();
+	rowOfNotes = protoNote.duplicate(8);
+	var pattern4 = new Pattern("snare",rowOfNotes);
+	pattern4.createGUI2();
 
 	var hiHatTest = new HihatTest(-1,pattern.pattern); // create a hiHat test event creator
 	var schedular = new Schedular(context,0.05,0.07,hiHatTest); // play it with a schedular
@@ -767,9 +872,9 @@ $(document).ready( function ( ) {
 	var snareDrumTest = new SnareTest(pattern4.pattern);
 	var schedular4 = new Schedular(context,0.05,0.07,snareDrumTest);
 	schedular4.start();
-
-
 });
+
+
 
 
 

@@ -1,6 +1,7 @@
 body {
 	font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 	font-size: 36px;
+    background-color: #addab1
 }
 
 .noselect {
@@ -13,9 +14,45 @@ body {
     cursor: default;
 }
 
+.testMouse {
+    width: 30px;
+    height: 30px;
+    font-size: 0.25em;
+    text-align:center;
+
+    border: solid 5px #fff;
+    line-height: 30px;
+    vertical-align: middle;
+
+    background-color: #efefef;
+    cursor: pointer;
+    display: inline-block;
+    box-shadow: 1px 1px 2px #888888;
+    margin-right: 5px;
+}
+
 .patternCell {
 	display:inline-block;
 	text-align: center;
 	width:50px;
 	height:50px;
+}
+
+.sliderBack {
+    display:inline-block;
+    background-color:#ddd;
+    width:10px;
+    height:127px;
+    z-index:100;
+}
+
+.sliderValue {
+    display:inline-block;
+    background-color: #000;
+    position: absolute;
+    top: 0px;
+    left:0px;
+    width:10px;
+    height:100px;
+    z-index:99;
 }

@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="us">
+<head>
+	<meta charset="utf-8">
+	<title>jQuery UI Example Page</title>
+	<link href="jquery-ui.css" rel="stylesheet">
+	<style>
+    body {
+    	-webkit-touch-callout: none;
+	    -webkit-user-select: none;
+	    -khtml-user-select: none;
+	    -moz-user-select: none;
+	    -ms-user-select: none;
+	    user-select: none;
+    }
+
+	.testMouse {
+		font-size: 0.5em;
+		border: solid 1px #BADA55;
+		text-align:center;
+		line-height: 30px;
+		vertical-align: middle;
+		width: 30px;
+		height: 30px;
+		background-color: white;
+		cursor: pointer;
+		display: inline-block;
+	}
+	</style>
+</head>
+<body>
+<br>
+
+<div id="test1" class="testMouse"> </div>
+<div id="test2" class="testMouse"> </div>
+<div id="test3" class="testMouse"> </div>
+<div id="test4" class="testMouse"> </div>
+<div id="test5" class="testMouse"> </div>
+<div id="test6" class="testMouse"> </div>
+<div id="test7" class="testMouse"> </div>
+<div id="test8" class="testMouse"> </div>
+<div id="test9" class="testMouse"> </div>
+<div id="test10" class="testMouse"> </div>
+<div id="test11" class="testMouse"> </div>
+<div id="test12" class="testMouse"> </div>
+
+<link rel="stylesheet" type="text/css" href="normalize.css">
+<script src="external/jquery/jquery.js"></script>
+<!-- <script src="jquery-ui.js"></script> -->
+<script>
+
+var shadedSliderModule = function( ) {
+	var isDragging = false;
+	var slideHeight = 100.0;
+
+	var clip = function(value,min,max) { // helper
+		return Math.max(Math.min(max,value),min);
+	}
+
+	var numberToHexColor = function(value) {
+		value = Math.floor(value * 255);
+		value = value.toString(16);
+		if (value.length < 2) value = "0" + value; // pad with a zero;
+		return "#"+value+value+value;
+	}
+
+	var numberToHexColor2 = function(value,value2) {
+		value = Math.floor(value * 255);
+		value2 = Math.floor((1.0-value2) * 255);
+
+		value = value.toString(16);
+		value2 = value.toString(16);
+
+		if (value.length < 2) value = "0" + value;
+		if (value2.length < 2) value2 = "0" + value2;
+		return "#"+value+value2+value2;
+	}
+
+	var dragChangesColor = function(object,pattern,index) {
+		object = $(this); // fetch the object 
+		object.text("0.00");
+		object.mousedown( function( ) { // set the mousedown
+			var offsetY = object.offset().top;
+			var offsetX = object.offset().left;
+			//var height = object.height();
+			$(window).mousemove(function(e) { // connect a mouseMove
+				var value = clip(
+						((e.clientY - offsetY) / slideHeight)
+				,0,1);
+
+				var valueX = clip(
+					((e.clientX - offsetX) / slideHeight)
+					0,1);
+
+				console.log(valueX);
+
+				// store the value in the object.
+
+				object.css("background-color",numberToHexColor2(value,valueX));
+				object.css("color",numberToHexColor((value < 0.5) ? 1 : 0));
+
+				pattern.updateIndex(index,value);
+// console.log(calcForegroundColor(value));
+
+				value = (1.0 - value).toFixed(2);
+
+				object.text(value);
+
+				isDragging = true;
+			});
+		});
+		$(window).mouseup( function( ) {
+			var wasDragging = isDragging;
+			isDragging = false;
+			$(window).unbind("mousemove"); 
+			if (!wasDragging) {
+			}
+		});
+	}
+
+	var pattern = {};
+	pattern.pattern = cs.fill(16,0);
+	
+	pattern.updateIndex = function (index,value) {
+		if (index < this.pattern.length) {
+			pattern[index] = value;
+		}
+	}
+
+	$(".testMouse").map(function(index,element) {
+		dragChangesColor(element,pattern,index);
+	});
+}();
+
+
+
+// $( ".slider" ).slider({
+// 	range: false,
+// 	value: 100,
+// 	orientation: 'vertical',
+// 	slide: function( event, ui ) {
+//         $( "#displaySliderValue" ).html( ui.value );
+//       }
+// });
+
+</script>
+</body>
+</html>
